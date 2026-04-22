@@ -41,6 +41,10 @@ public class Pagamento {
         atualizarData();
     }
 
+    public void setSaldoDevedor(double valor){
+        this.saldoDevedor = valor;
+    }
+
     public void quitarTotalmente(){
         this.saldoDevedor = 0;
         atualizarData();

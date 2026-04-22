@@ -22,8 +22,24 @@ public class RegistroEmprestimo {
         return idTransacao;
     }
 
+    public LocalDate getDataDevolucao() {
+        return dataDevolucao;
+    }
+
     public void setIdTransacao(long idTransacao) {
         this.idTransacao = idTransacao;
+    }
+
+    public void setDataDevolucao(LocalDate dataDevolucao) {
+        this.dataDevolucao = dataDevolucao;
+    }
+
+    public void setDataEmprestimo(LocalDate dataEmprestimo) {
+        this.dataEmprestimo = dataEmprestimo;
+    }
+
+    public void setFinalizado(boolean finalizado) {
+        this.finalizado = finalizado;
     }
 
     public long getIdUsuario() {
