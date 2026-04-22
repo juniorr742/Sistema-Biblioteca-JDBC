@@ -101,6 +101,23 @@ public class EmprestimosDAO implements IDao<RegistroEmprestimo> {
         }
     }
 
+    public List<RegistroEmprestimo> buscarEmprestimosAtivos(long idUsuario)throws SQLException{
+        String sql = "SELECT * FROM registros WHERE id = ? AND finalizado = false";
+
+        try (Connection conn = ConnectionFactory.getConnection();
+        PreparedStatement stmt = conn.prepareStatement(sql)){
+
+            stmt.setLong(1, idUsuario);
+
+            ResultSet rs = stmt.executeQuery();
+            List<RegistroEmprestimo> lista = new ArrayList<>();
+            while (rs.next()){
+                lista.add(mapearEmprestimo(rs));
+            }
+            return lista;
+        }
+    }
+
     private RegistroEmprestimo mapearEmprestimo(ResultSet rs) throws SQLException {
         RegistroEmprestimo registroEmprestimo = new RegistroEmprestimo(rs.getLong("id_usuario"), rs.getLong("id_livro"));
 

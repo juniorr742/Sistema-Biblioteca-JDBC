@@ -1,88 +1,143 @@
 package br.com.biblioteca.controller;
 
+import br.com.biblioteca.dao.EmprestimosDAO;
+import br.com.biblioteca.dao.LivroDAO;
+import br.com.biblioteca.dao.UsuarioDAO;
 import br.com.biblioteca.model.Livro;
 import br.com.biblioteca.model.RegistroEmprestimo;
 import br.com.biblioteca.model.Usuario;
 import br.com.biblioteca.service.EmprestimoService;
 import br.com.biblioteca.service.PagamentoService;
 
+import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class Biblioteca {
-    private List<Livro> acervo;
-    private List<Usuario> usuarios;
-    private List<RegistroEmprestimo> historicoEmprestimos;
+    //private List<Livro> acervo;
+    //private List<Usuario> usuarios;
+    //private List<RegistroEmprestimo> historicoEmprestimos;
     private PagamentoService pagamentoService;
     private EmprestimoService emprestimoService;
+    private LivroDAO livroDAO;
+    private UsuarioDAO usuarioDAO;
+    private EmprestimosDAO emprestimosDAO;
 
-
-    public Biblioteca(PagamentoService pagamentoService, EmprestimoService emprestimoService){
-        this.acervo = new ArrayList<>();
-        this.usuarios = new ArrayList<>();
-        this.historicoEmprestimos = new ArrayList<>();
+    public Biblioteca(PagamentoService pagamentoService, EmprestimoService emprestimoService, LivroDAO livroDAO, UsuarioDAO usuarioDAO, EmprestimosDAO emprestimosDAO){
+        //this.acervo = new ArrayList<>();
+        this.livroDAO = livroDAO;
+        //this.usuarios = new ArrayList<>();
+        this.usuarioDAO = usuarioDAO;
+        //this.historicoEmprestimos = new ArrayList<>();
+        this.emprestimosDAO = emprestimosDAO;
         this.pagamentoService = pagamentoService;
         this.emprestimoService = emprestimoService;
     }
 
     public Usuario buscarUsuariosPorId(long id){
-        return usuarios.stream().filter(u -> u.getId() == id).findFirst().orElse(null);
+        try {
+            return usuarioDAO.buscarPorId(id);
+        } catch (SQLException e){
+            System.out.println("Erro ao acessar o banco "+ e.getMessage() );
+            return null;
+        }
     }
 
     public Livro buscarLivroPorId(long id){
-        return acervo.stream().filter(l -> l.getId() == id).findFirst().orElse(null);
+        try {
+            return livroDAO.buscarPorId(id);
+        } catch (SQLException e) {
+            System.out.println("Erro ao acessar o banco "+ e.getMessage());
+            return null;
+        }
     }
 
-
     public void adicionarUsuario(Usuario novoUsuario){
-        usuarios.add(novoUsuario);
+        try {
+            usuarioDAO.salvar(novoUsuario);
+            System.out.println("Usuário adicionado.");
+        } catch (SQLException e) {
+            System.out.println("Erro ao acessar o banco" + e.getMessage());
+        }
     }
 
     public void adicionarLivro(Livro livro){
-        acervo.add(livro);
+        try {
+            livroDAO.salvar(livro);
+            System.out.println("Livro adicionado com sucesso");
+        } catch (SQLException e) {
+            System.out.println("Erro ao acessar o banco" + e.getMessage());
+        }
     }
 
     public List<Usuario> listarTodosUsuarios(){
-        return Collections.unmodifiableList(usuarios);
+        try {
+            return usuarioDAO.listarTodos();
+        } catch (SQLException e) {
+            System.out.println("Erro ao acessar banco "+ e.getMessage());
+            return  null;
+        }
     }
 
     public List<Livro> listarTodosLivros(){
-        return Collections.unmodifiableList(acervo);
+        try {
+            return livroDAO.listarTodos();
+        } catch (SQLException e) {
+            System.out.println("Erro ao acessar o banco " + e.getMessage());
+            return null;
+        }
     }
 
      public void listarHistorico(){
          System.out.println("\n=====HISTÓRICO DOS REGISTROS=====");
-         historicoEmprestimos.forEach(System.out::println);
+         try {
+             emprestimosDAO.listarTodos();
+         } catch (SQLException e) {
+             System.out.println("Erro ao acessar o banco " + e.getMessage());
+         }
      }
 
     public List<Livro> procurarLivroPorTitulo(String termoBusca){
-        if (termoBusca == null || termoBusca.isBlank()) {
-            return new ArrayList<>();
+        try {
+            return livroDAO.buscarLivroPorTitulo(termoBusca);
+        } catch (SQLException e) {
+            System.out.println("Erro ao acessar o banco. " + e.getMessage());
+            return null;
         }
-
-        String termoTradado = termoBusca.toLowerCase().trim();
-
-        return acervo.stream().filter(l -> l.getTitulo().toLowerCase().contains(termoTradado)).toList();
     }
 
     public List<Usuario> procurarUsuarioPorNome(String termoBusca){
-        if (termoBusca == null || termoBusca.isBlank()){
-            return new ArrayList<>();
+        try {
+            return usuarioDAO.buscarUsuarioPorNome(termoBusca);
+        } catch (SQLException e) {
+            System.out.println("Erro ao acessar o banco. "+ e.getMessage());
+            return null;
         }
-
-        String termoTratado = termoBusca.toLowerCase().trim();
-
-        return usuarios.stream().filter(u -> u.getNome().toLowerCase().contains(termoTratado)).toList();
     }
 
    public void devolverLivro(long idLivro, long idUsuario, int diasCorridos) {
        Usuario usuario = buscarUsuariosPorId(idUsuario);
        Livro livro = buscarLivroPorId(idLivro);
        if (usuario != null && livro != null) {
-           emprestimoService.realizarDevolucao(usuario, livro, diasCorridos);
-           historicoEmprestimos.stream().filter(h -> h.getIdLivro() == idLivro && h.getIdUsuario() == idUsuario && !h.isFinalizado())
-                   .findFirst().ifPresent(RegistroEmprestimo::finalizarEmprestimo);
+          try {
+              List<RegistroEmprestimo> ativos = emprestimosDAO.buscarEmprestimosAtivos(idUsuario);
+              RegistroEmprestimo registro = ativos.stream().filter(r -> r.getIdLivro() == idLivro)
+                      .findFirst().orElse(null);
+              if (registro == null){
+                  System.out.println("ERRO: Nenhum empréstimo ativo encontrado para esse livro");
+                  return;
+              }
+
+              emprestimoService.realizarDevolucao(usuario, livro, diasCorridos);
+
+              registro.setDataDevolucao(LocalDate.now());
+              registro.setFinalizado(true);
+              emprestimosDAO.atualizar(registro);
+          } catch (SQLException e) {
+              System.out.println("Erro ao conectar com o banco " + e.getMessage());
+          }
        } else {
            System.out.println("[AVISO] - Usuário ou livro não encontrado.");
        }
@@ -99,18 +154,23 @@ public class Biblioteca {
         emprestimoService.emprestarLivro(usuarioEncontrado, livroEncontrado);
             if (!livroEncontrado.isDisponivel()){
                 RegistroEmprestimo novoRegistro = new RegistroEmprestimo(idUsuario, idLivro);
-                historicoEmprestimos.add(novoRegistro);
-                System.out.println("Hisórico gerado: Transação #"+ novoRegistro.getIdTransacao());
+                try {
+                    emprestimosDAO.salvar(novoRegistro);
+                    System.out.println("Hisórico gerado: Transação #"+ novoRegistro.getIdTransacao());
+                } catch (SQLException e) {
+                    System.out.println("Erro ao acessar o banco "+ e.getMessage());
+                }
             }else {
                 System.out.println("[AVISO] Erro ao realizar empréstimo");
             }
 
     }
 
-    public void verificarSaldo(long idPagamento){
-        Usuario usuarioEcontrado = buscarUsuariosPorId(idPagamento);
+    public void verificarSaldo(long id){
+        Usuario usuarioEcontrado = buscarUsuariosPorId(id);
 
             if (usuarioEcontrado != null){
+
                 System.out.println("Seu saldo devedor é: " + usuarioEcontrado.getSaldo().getSaldoDevedor());
             } else {
                 System.out.println("Id não identificado");
