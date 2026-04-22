@@ -4,6 +4,7 @@ import br.com.biblioteca.model.Livro;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.List;
 
 public class LivroDAO implements IDao<Livro> {
 
@@ -30,7 +31,8 @@ public class LivroDAO implements IDao<Livro> {
         }
     }
 
-    public Livro buscarLivroPorId(long id) throws SQLException{
+    @Override
+    public Livro buscarPorId(long id) throws SQLException{
         String sql = "SELECT * FROM livros WHERE id = ?";
 
         try(Connection conn = ConnectionFactory.getConnection();
@@ -44,6 +46,72 @@ public class LivroDAO implements IDao<Livro> {
                 return mapearLivro(rs);
             }
             return null;
+        }
+    }
+
+    @Override
+    public List<Livro> listarTodos() throws SQLException{
+        String sql = "SELECT * FROM livros";
+        List<Livro>  livros = new ArrayList<>();
+
+        try(Connection conn = ConnectionFactory.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)){
+
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()){
+                livros.add(mapearLivro(rs));
+            }
+            return livros;
+        }
+    }
+
+    @Override
+    public boolean atualizar(Livro livro) throws SQLException {
+        String sql = "UPDATE livros SET titulo = ?, autor = ?, disponivel = ? WHERE id = ?";
+
+        try(Connection conn = ConnectionFactory.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)){
+
+            stmt.setString(1, livro.getTitulo());
+            stmt.setString(2, livro.getAutor());
+            stmt.setBoolean(3, livro.isDisponivel());
+            stmt.setLong(4, livro.getId());
+
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
+    public boolean deletar(long id) throws SQLException{
+        String sql = "DELETE FROM livros WHERE id = ?";
+
+        try (Connection conn = ConnectionFactory.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)){
+
+            stmt.setLong(1, id);
+
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
+    public List<Livro> buscarLivroPorTitulo(String titulo) throws SQLException{
+        if (titulo == null || titulo.isBlank()){
+            return new ArrayList<>();
+        }
+
+        String sql = "SELECT * FROM livros WHERE titulo LIKE ?";
+
+        try (Connection conn = ConnectionFactory.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)){
+
+            stmt.setString(1, "%"+titulo.trim()+"%");
+
+            ResultSet rs = stmt.executeQuery();
+            List<Livro> lista = new ArrayList<>();
+            while (rs.next()){
+                lista.add(mapearLivro(rs));
+            }
+            return lista;
         }
     }
 

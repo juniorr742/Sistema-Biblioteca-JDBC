@@ -1,4 +1,5 @@
-/*package br.com.biblioteca.dao;
+package br.com.biblioteca.dao;
+import br.com.biblioteca.factory.UsuarioFactory;
 import br.com.biblioteca.model.Aluno;
 import br.com.biblioteca.model.Professor;
 import br.com.biblioteca.model.Usuario;
@@ -8,54 +9,125 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
-public class UsuarioDAO {
-    private String url = "jdbc:mysql://localhost:3306/biblioteca_db";
-    private String user =  "root";
-    private String password = "admin123";
+public class UsuarioDAO implements IDao<Usuario>{
 
-    public void salvar(Usuario usuario){
+    @Override
+    public boolean salvar(Usuario usuario) throws SQLException{
         String sql = "INSERT INTO usuarios (nome, tipo, saldo_devedor) VALUES (?, ?, ?)";
 
-        try (Connection conn = DriverManager.getConnection(url, user, password);
-        PreparedStatement stmt = conn.prepareStatement(sql)){
+        try (Connection conn = ConnectionFactory.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){
+
             stmt.setString(1, usuario.getNome());
-
-            if (usuario instanceof Aluno){
-                stmt.setString(2, "Aluno");
-            }else {
-                stmt.setString(2, "Professor");
-            }
+            stmt.setString(2, usuario.obterTipo());
             stmt.setDouble(3, usuario.getSaldo().getSaldoDevedor());
-            stmt.executeUpdate();
 
+            int linhasAfetadas = stmt.executeUpdate();
 
-            System.out.println("Sucesso!! " + usuario.getNome() + " cadastrado com sucesso no banco");
-        }catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-   /* public Usuario buscarporId(int id){
-        String sql = "SELECT * FROM usuarios WHERE id = ?";
-        try (Connection conn = DriverManager.getConnection(url, user, password);
-        PreparedStatement stmt = conn.prepareStatement(sql)){
-            stmt.setInt(1, id);
-            ResultSet rs = stmt.executeQuery();
+            ResultSet rs = stmt.getGeneratedKeys();
 
             if (rs.next()){
-                String nome = rs.getString("nome");
-                String tipo = rs.getString("tipo");
-                double saldoNoBanco = rs.getDouble("saldo_devedor");
-
-                Usuario u = tipo.equalsIgnoreCase("ALUNO") ? new Aluno(nome) : new Professor(nome);
-                u.setId(rs.getInt("id"));
-                u.getSaldo().setSaldoDevedor(saldoNoBanco);
-                return u;
+                usuario.setId(rs.getLong(1));
             }
-        }catch (SQLException e){
-            e.printStackTrace();
+
+            return linhasAfetadas > 0;
         }
-        return null;
     }
-}*/
+
+    @Override
+    public Usuario buscarPorId(long id) throws SQLException{
+        String sql = "SELECT * FROM usuarios WHERE id = ?";
+
+        try (Connection conn = ConnectionFactory.getConnection();
+        PreparedStatement stmt = conn.prepareStatement(sql)){
+
+            stmt.setLong(1, id);
+
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return mapearUsuario(rs);
+            }
+            return null;
+        }
+    }
+
+    @Override
+    public List<Usuario> listarTodos() throws SQLException{
+        String sql = "SELECT * FROM usuarios";
+        List<Usuario> lista = new ArrayList<>();
+
+        try (Connection conn = ConnectionFactory.getConnection();
+        PreparedStatement stmt = conn.prepareStatement(sql)){
+
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()){
+                lista.add(mapearUsuario(rs));
+            }
+            return lista;
+        }
+    }
+
+    @Override
+    public boolean atualizar(Usuario usuario) throws SQLException{
+        String sql = "UPDATE usuarios SET nome = ?, tipo = ?, saldo_devedor = ? WHERE id = ?";
+
+        try (Connection conn = ConnectionFactory.getConnection();
+        PreparedStatement stmt = conn.prepareStatement(sql)){
+
+            stmt.setString(1, usuario.getNome());
+            stmt.setString(2, usuario.obterTipo());
+            stmt.setDouble(3, usuario.getSaldo().getSaldoDevedor());
+            stmt.setLong(4, usuario.getId());
+
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
+    @Override
+    public boolean deletar(long id) throws SQLException{
+        String sql = "DELETE FROM usuarios WHERE id = ?";
+
+        try (Connection conn = ConnectionFactory.getConnection();
+        PreparedStatement stmt = conn.prepareStatement(sql)){
+
+            stmt.setLong(1, id);
+
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
+    public List<Usuario> buscarUsuarioPorNome(String nome) throws SQLException{
+        if (nome == null || nome.isBlank()){
+            return new ArrayList<>();
+        }
+        String sql = "SELECT * FROM usuarios WHERE nome LIKE ?";
+
+        try (Connection conn = ConnectionFactory.getConnection();
+        PreparedStatement stmt = conn.prepareStatement(sql)){
+
+            stmt.setString(1, "%"+nome+"%");
+
+            List<Usuario> lista = new ArrayList<>();
+
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()){
+                lista.add(mapearUsuario(rs));
+            }
+            return lista;
+        }
+    }
+
+    private Usuario mapearUsuario(ResultSet rs) throws SQLException{
+
+        Usuario usuario = UsuarioFactory.criarUsuario(rs.getString("tipo"), rs.getString("nome"));
+        usuario.setId(rs.getLong("id"));
+        usuario.getSaldo().setSaldoDevedor(rs.getDouble("saldo_devedor"));
+        return usuario;
+    }
+}
