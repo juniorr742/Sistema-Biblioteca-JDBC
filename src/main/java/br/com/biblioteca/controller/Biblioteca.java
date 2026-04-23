@@ -90,7 +90,22 @@ public class Biblioteca {
         }
     }
 
-     public void listarHistorico(){
+     public List<Livro> listarLivrosEmprestadosPorUsuario(long idUsuario) {
+        try {
+            List<RegistroEmprestimo> ativos = emprestimosDAO.buscarEmprestimosAtivos(idUsuario);
+            List<Livro> livros = new ArrayList<>();
+            for (RegistroEmprestimo r : ativos) {
+                Livro l = livroDAO.buscarPorId(r.getIdLivro());
+                if (l != null) livros.add(l);
+            }
+            return livros;
+        } catch (SQLException e) {
+            System.out.println("Erro ao acessar o banco " + e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+    public void listarHistorico(){
          System.out.println("\n=====HISTÓRICO DOS REGISTROS=====");
          try {
              emprestimosDAO.listarTodos();
