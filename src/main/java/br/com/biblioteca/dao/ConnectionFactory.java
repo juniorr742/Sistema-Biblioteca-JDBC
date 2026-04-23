@@ -16,7 +16,7 @@ public class ConnectionFactory {
      Properties props = new Properties();
 
      try {
-         props.load(Connection.class.getClassLoader().getResourceAsStream("db.properties"));
+         props.load(ConnectionFactory.class.getClassLoader().getResourceAsStream("db.properties"));
      } catch (IOException e) {
          throw new RuntimeException("Erro ao ler db.properties" , e);
      }
