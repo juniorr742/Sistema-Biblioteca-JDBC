@@ -102,7 +102,7 @@ public class EmprestimosDAO implements IDao<RegistroEmprestimo> {
     }
 
     public List<RegistroEmprestimo> buscarEmprestimosAtivos(long idUsuario)throws SQLException{
-        String sql = "SELECT * FROM registros WHERE id = ? AND finalizado = false";
+        String sql = "SELECT * FROM registros WHERE id_usuario = ? AND finalizado = false";
 
         try (Connection conn = ConnectionFactory.getConnection();
         PreparedStatement stmt = conn.prepareStatement(sql)){
