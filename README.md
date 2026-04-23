@@ -58,14 +58,6 @@ resources/
 
 Crie o arquivo `src/main/resources/db.properties` com suas credenciais:
 
-```properties
-db.url=jdbc:mysql://localhost:3306/biblioteca_jdbc
-db.user=root
-db.password=sua_senha
-```
-
-> ⚠️ Este arquivo **não é versionado**. Adicione-o ao `.gitignore`.
-
 ### Banco de dados
 
 Execute o script SQL para criar as tabelas:
@@ -107,10 +99,10 @@ CREATE TABLE emprestimos (
 - [x] Lógica de negócio em Java puro *(repositório anterior)*
 - [x] Arquitetura em camadas (MVC parcial)
 - [x] Injeção de dependência sem acoplamento forte
-- [ ] `ConnectionFactory` para gerenciar conexões
-- [ ] Credenciais externalizadas em `db.properties`
-- [ ] DAO com CRUD completo para Usuário, Livro e Empréstimo
-- [ ] Exceções customizadas no lugar de mensagens de console
+- [x] `ConnectionFactory` para gerenciar conexões
+- [x] Credenciais externalizadas em `db.properties`
+- [x] DAO com CRUD completo para Usuário, Livro e Empréstimo
+- [x] Exceções customizadas no lugar de mensagens de console
 - [ ] Migração para Spring Boot *(será desenvolvido em repositório separado)*
 
 ---
