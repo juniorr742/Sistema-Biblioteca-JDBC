@@ -21,7 +21,7 @@ public class MenuUsuario extends MenuBase{
 
             switch (lerInteiro()){
                 case 1:
-                    System.out.println("[1] - Aluno | [2] - Professor");
+                    System.out.println("Digite seu tipo =  Aluno | Professor");
                     String tipoEscolhido = sc.nextLine();
                     System.out.println("Qual seu nome: ");
                     String nome = sc.nextLine();

@@ -4,6 +4,7 @@ import br.com.biblioteca.controller.Biblioteca;
 import br.com.biblioteca.model.Livro;
 import br.com.biblioteca.model.Usuario;
 
+import java.util.List;
 import java.util.Scanner;
 
 public class MenuLivro extends MenuBase{
@@ -49,17 +50,18 @@ public class MenuLivro extends MenuBase{
                         System.out.println("[AVISO] Usuário inválido!");
                         continue;
                     }
-                    if (U.getlivroEmprestado().isEmpty()){
+                    List<Livro> emprestados = biblioteca.listarLivrosEmprestadosPorUsuario(U.getId());
+                    if (emprestados.isEmpty()){
                         System.out.println("[AVISO] Esse usuário não possui livros em sua posse.");
                         continue;
                     }
                     System.out.println("\nLivros atualmente com "+ U.getNome() +":");
-                    for (Livro L : U.getlivroEmprestado()){
-                        System.out.printf("[%d] - %s", L.getId(), L.getTitulo());
+                    for (Livro L : emprestados){
+                        System.out.printf("[%d] - %s\n", L.getId(), L.getTitulo());
                     }
-                    System.out.println(", Digite o id do livro que quer devolver: ");
+                    System.out.print("Digite o id do livro que quer devolver: ");
                     long idLivro = lerInteiro();
-                    Livro livroParaDevolver = U.getlivroEmprestado().stream().filter(leitura -> leitura.getId() == idLivro).findFirst().orElse(null);
+                    Livro livroParaDevolver = emprestados.stream().filter(leitura -> leitura.getId() == idLivro).findFirst().orElse(null);
 
                     if (livroParaDevolver == null){
                         System.out.println("[AVISO] - Esse livro não está com o usuário ou id incorreto.");

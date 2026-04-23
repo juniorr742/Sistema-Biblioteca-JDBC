@@ -7,15 +7,15 @@ import br.com.biblioteca.model.Professor;
 public class UsuarioFactory {
     public static Usuario criarUsuario(String tipo, String nome) {
         if (tipo == null || tipo.isBlank()) {
-            throw new RuntimeException("Tipo não pode ser vazio.");
+            return null;
         }
-        switch (tipo.trim()) {
-            case "Aluno":
+        switch (tipo.trim().toLowerCase()) {
+            case "aluno":
                 return new Aluno(nome);
-            case "Professor":
+            case "professor":
                 return new Professor(nome);
             default:
-                throw new RuntimeException("Tipo desconhecido: " + tipo);
+                return null;
         }
     }
 }
