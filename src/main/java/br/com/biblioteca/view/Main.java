@@ -12,19 +12,20 @@ public class Main {
         Scanner sc = new Scanner(System.in);
 
         UsuarioDAO usuarioDAO = new UsuarioDAO();
-        PagamentoService pagamentoService = new PagamentoService(usuarioDAO);
+        LivroDAO livroDAO = new LivroDAO();
+        EmprestimosDAO emprestimosDAO = new EmprestimosDAO();
+
+        PagamentoService pagamentoService = new PagamentoService();
         ValidadorEmprestimo validadorEmprestimo = new ValidadorEmprestimo();
         CalculadoraMulta calculadoraMulta = new CalculadoraMulta();
-        EmprestimosDAO emprestimosDAO = new EmprestimosDAO();
-        LivroDAO livroDAO = new LivroDAO();
-        EmprestimoService emprestimoService = new EmprestimoService(validadorEmprestimo, calculadoraMulta, pagamentoService, livroDAO, usuarioDAO);
+        EmprestimoService emprestimoService = new EmprestimoService(validadorEmprestimo, calculadoraMulta, pagamentoService);
 
         Biblioteca biblioteca = new Biblioteca(pagamentoService, emprestimoService, livroDAO, usuarioDAO, emprestimosDAO);
 
         MenuUsuario menuUsuario = new MenuUsuario(biblioteca, sc);
         MenuLivro menuLivro = new MenuLivro(biblioteca, sc);
         MenuFinanceiro menuFinanceiro = new MenuFinanceiro(biblioteca, sc);
-        MenuPrincipal menuPrincipal = new MenuPrincipal(biblioteca,sc,menuUsuario,menuLivro,menuFinanceiro);
+        MenuPrincipal menuPrincipal = new MenuPrincipal(biblioteca, sc, menuUsuario, menuLivro, menuFinanceiro);
 
         menuPrincipal.iniciar();
     }
